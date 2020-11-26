@@ -1,0 +1,36 @@
+rootProject.name = "Learn_Shadow"
+
+if (!System.getenv().containsKey("ANDROID_HOME")) {
+    throw new RuntimeException("未定义ANDROID_HOME环境变量。" +
+            "原因：Android Studio目前不支持自动为复合构建中的子构建自动创建local.properties文件。" +
+            "注意：新增环境变量后，一般不会立即生效，最简单的办法是重启电脑。")
+}
+
+//Shadow 的源码库
+includeBuild 'shadow/sdk/coding'
+includeBuild 'shadow/sdk/core'
+includeBuild 'shadow/sdk/dynamic'
+
+//宿主的相关库
+include ':host'
+include ':host-constant'
+include ':host-lib'
+
+//宿主用来调用插件的插件管理打包库，用来生成apk提供给宿主使用。
+include ':plugin-manager'
+
+//插件的相关库
+includePlugin()
+
+def includePlugin() {
+    include 'plugin-loader',
+            'plugin-runtime',
+            'plugin-app-lib',
+            'normal-app',
+            'plugin-app'
+    project(':plugin-loader').projectDir = file('plugin/plugin-loader')
+    project(':plugin-runtime').projectDir = file('plugin/plugin-runtime')
+    project(':plugin-app-lib').projectDir = file('plugin/plugin-app-lib')
+    project(':normal-app').projectDir = file('plugin/normal-app')
+    project(':plugin-app').projectDir = file('plugin/plugin-app')
+}

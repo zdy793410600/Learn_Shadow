@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.tencent.shadow.sample.plugin.app.lib">
+
+    <application
+        android:name="com.clark.learn.plugin_app.PluginApplication"
+        android:label="TestPlugin">
+
+        <activity
+            android:name="com.clark.learn.plugin_app.MainActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name="com.clark.learn.plugin_app.TestFragmentActivity" />
+
+    </application>
+
+</manifest>

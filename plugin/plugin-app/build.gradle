@@ -1,0 +1,125 @@
+apply from: "../normal-app/build.gradle"
+
+android {
+    defaultConfig {
+        applicationId project.SAMPLE_HOST_APP_APPLICATION_ID
+    }
+}
+
+dependencies {
+    //Shadow Transform后业务代码会有一部分实际引用runtime中的类
+    //如果不以compileOnly方式依赖，会导致其他Transform或者Proguard找不到这些类
+    compileOnly 'com.tencent.shadow.core:runtime-debug'
+}
+
+buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.tencent.shadow.core:runtime-debug'
+        classpath 'com.tencent.shadow.core:activity-container-debug'
+        classpath 'com.tencent.shadow.core:gradle-plugin'
+        classpath 'org.javassist:javassist:3.22.0-GA'
+    }
+}
+
+def createDuplicateApkTask(buildType) {
+    def apkDir = file("${getBuildDir()}/outputs/apk/$buildType")
+
+    return tasks.create("duplicate${buildType.capitalize()}ApkTask", Copy) {
+        group = 'build'
+        description = "复制一个plugin-app-${buildType}.apk用于测试目的"
+        from(apkDir) {
+            include("plugin-app-${buildType}.apk")
+            rename { "plugin-app-${buildType}2.apk" }
+        }
+        into(apkDir)
+
+    }.dependsOn(":plugin-app:assemble${buildType.capitalize()}")
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == "assembleDebug") {
+        def createTask = createDuplicateApkTask('debug')
+        task.finalizedBy(createTask)
+    }
+    if (task.name == "assembleRelease") {
+        def createTask = createDuplicateApkTask('release')
+        task.finalizedBy(createTask)
+    }
+}
+
+apply plugin: 'com.tencent.shadow.plugin'
+
+
+shadow {
+    transform {
+//        useHostContext = ['abc']
+    }
+
+    packagePlugin {
+        pluginTypes {
+            debug {
+                //这里配置loader和runtime，是为了将他们俩都打包进assets目录。
+                loaderApkConfig = new Tuple2('plugin-loader-debug.apk', ':plugin-loader:assembleDebug')
+                runtimeApkConfig = new Tuple2('plugin-runtime-debug.apk', ':plugin-runtime:assembleDebug')
+                pluginApks {
+                    pluginApk1 {
+                        businessName = 'plugin-app'
+                        partKey = 'plugin-app'
+                        buildTask = ':plugin-app:assembleDebug'
+                        apkName = 'plugin-app-debug.apk'
+                        apkPath = 'plugin/plugin-app/build/outputs/apk/debug/plugin-app-debug.apk'
+                        hostWhiteList = ["com.clark.learn.host_lib"]
+                    }
+                    pluginApk2 {
+                        businessName = 'plugin-app2'
+                        partKey = 'plugin-app2'
+                        buildTask = ':plugin-app:assembleDebug'
+                        apkName = 'plugin-app-debug2.apk'
+                        apkPath = 'plugin/plugin-app/build/outputs/apk/debug/plugin-app-debug2.apk'
+                        hostWhiteList = ["com.clark.learn.host_lib"]
+                    }
+                }
+            }
+
+            release {
+                //这里配置loader和runtime，是为了将他们俩都打包进assets目录。
+                loaderApkConfig = new Tuple2('plugin-loader-release.apk', ':plugin-loader:assembleRelease')
+                runtimeApkConfig = new Tuple2('plugin-runtime-release.apk', ':plugin-runtime:assembleRelease')
+                pluginApks {
+                    pluginApk1 {
+                        businessName = 'plugin-app'
+                        partKey = 'plugin-app'
+                        buildTask = ':plugin-app:assembleRelease'
+                        apkName = 'plugin-app-release.apk'
+                        apkPath = 'plugin/plugin-app/build/outputs/apk/release/plugin-app-release.apk'
+                        hostWhiteList = ["com.clark.learn.host_lib"]
+                    }
+                    pluginApk2 {
+                        businessName = 'plugin-app2'
+                        partKey = 'plugin-app2'
+                        buildTask = ':plugin-app:assembleRelease'
+                        apkName = 'plugin-app-release2.apk'
+                        apkPath = 'plugin/plugin-app/build/outputs/apk/release/plugin-app-release2.apk'
+                        hostWhiteList = ["com.clark.learn.host_lib"]
+                    }
+                }
+            }
+        }
+
+        loaderApkProjectPath = 'plugin/plugin-loader'
+        runtimeApkProjectPath = 'plugin/plugin-runtime'
+
+        archiveSuffix = System.getenv("PluginSuffix") ?: ""
+        archivePrefix = 'plugin'
+        destinationDir = "${getRootProject().getBuildDir()}"
+
+        version = 4
+        compactVersion = [1, 2, 3]
+        uuidNickName = "1.1.5"
+    }
+}
