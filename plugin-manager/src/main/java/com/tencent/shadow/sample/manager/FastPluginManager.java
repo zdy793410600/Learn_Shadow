@@ -47,7 +47,7 @@ import java.util.concurrent.TimeoutException;
 
 public abstract class FastPluginManager extends PluginManagerThatUseDynamicLoader {
 
-    private static final Logger mLogger = LoggerFactory.getLogger(FastPluginManager.class);
+    public static final Logger mLogger = LoggerFactory.getLogger(FastPluginManager.class);
 
     private ExecutorService mFixedPool = Executors.newFixedThreadPool(4);
 
@@ -56,7 +56,7 @@ public abstract class FastPluginManager extends PluginManagerThatUseDynamicLoade
     }
 
 
-    public InstalledPlugin installPlugin(String zip, String hash , boolean odex) throws IOException, JSONException, InterruptedException, ExecutionException {
+    public InstalledPlugin installPluginFromZip(String zip, String hash, boolean odex) throws IOException, JSONException, InterruptedException, ExecutionException {
         final PluginConfig pluginConfig = installPluginFromZip(new File(zip), hash);
         final String uuid = pluginConfig.UUID;
         List<Future> futures = new LinkedList<>();
@@ -112,7 +112,7 @@ public abstract class FastPluginManager extends PluginManagerThatUseDynamicLoade
     }
 
 
-    public void startPluginActivity( InstalledPlugin installedPlugin, String partKey, Intent pluginIntent) throws RemoteException, TimeoutException, FailedException {
+    public void startPluginActivity(InstalledPlugin installedPlugin, String partKey, Intent pluginIntent) throws RemoteException, TimeoutException, FailedException {
         Intent intent = convertActivityIntent(installedPlugin, partKey, pluginIntent);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         mPluginLoader.startActivityInPluginProcess(intent);

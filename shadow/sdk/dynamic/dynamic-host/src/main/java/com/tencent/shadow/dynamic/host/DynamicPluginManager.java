@@ -42,12 +42,30 @@ public final class DynamicPluginManager implements PluginManager {
     }
 
     @Override
-    public void enter(Context context, long fromId, Bundle bundle, EnterCallback callback) {
+    public void installPlugin(Context context, String zip, String hash, boolean odex, PluginInstallCallback callback) {
+        updateManagerImpl(context);
+        if (mManagerImpl == null) {
+            if (callback != null) {
+                callback.onFail("DynamicPluginManager.installPlugin() -> error:mManagerImpl==null");
+            }
+            return;
+        }
+        mManagerImpl.installPlugin(context, zip, hash, odex, callback);
+    }
+
+    @Override
+    public void uninstallPlugin(String uuid, PluginUninstallCallback uninstallCallback) {
+        if (mManagerImpl != null) {
+            mManagerImpl.uninstallPlugin(uuid, uninstallCallback);
+        }
+    }
+
+    @Override
+    public void enter(Context context, String uuid, long fromId, Bundle bundle, EnterCallback callback) {
         if (mLogger.isInfoEnabled()) {
             mLogger.info("enter fromId:" + fromId + " callback:" + callback);
         }
-        updateManagerImpl(context);
-        mManagerImpl.enter(context, fromId, bundle, callback);
+        mManagerImpl.enter(context, uuid, fromId, bundle, callback);
         mUpdater.update();
     }
 

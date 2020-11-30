@@ -29,11 +29,28 @@ import android.os.Bundle;
 public interface PluginManager {
 
     /**
-     * @param context context
-     * @param formId  标识本次请求的来源位置，用于区分入口
-     * @param bundle  参数列表
+     * 安装插件
+     *
+     * @param zip
+     * @param hash
+     * @param odex
+     * @return 插件的UUID
+     */
+    void installPlugin(Context context, String zip, String hash, boolean odex, PluginInstallCallback callback);
+
+    /**
+     * 卸载插件
+     *
+     * @param uuid
+     */
+    void uninstallPlugin(String uuid, PluginUninstallCallback pluginUninstallCallback);
+
+    /**
+     * @param context  context
+     * @param formId   标识本次请求的来源位置，用于区分入口
+     * @param bundle   参数列表
      * @param callback 用于从PluginManager实现中返回View
      */
-    void enter(Context context, long formId, Bundle bundle, EnterCallback callback);
+    void enter(Context context, String uuid, long formId, Bundle bundle, EnterCallback callback);
 
 }
